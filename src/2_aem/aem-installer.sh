@@ -320,6 +320,10 @@ setDispatcherReplicationAgent () {
   curlOutput=$(curl --verbose --user admin:"$ADMIN_PASSWORD" \
       -F "transportUri=http://$DISPATCHER_HOSTNAME:80/dispatcher/invalidate.cache" \
       -F "enabled=true" \
+      -F "protocolHTTPHeaders=CQ-Action:{action}" \
+      -F "protocolHTTPHeaders=CQ-Handle:{path}" \
+      -F "protocolHTTPHeaders=CQ-Path: {path}" \
+      -F "protocolHTTPHeaders=Host:flush"
       "http://localhost:$AEM_HTTP_PORT/etc/replication/agents.author/flush/jcr:content")
   echo "$curlOutput"
   if echo "$curlOutput" | grep -iq "Content modified"

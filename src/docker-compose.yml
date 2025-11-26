@@ -5,6 +5,18 @@ x-custom-variables:
   DISPATCHER_HOSTNAME: dispatcher
 
 services:
+  aem-base-jvm8:
+    build:
+      context: .
+      dockerfile: 1_base/Dockerfile
+      args:
+        JAVA_VERSION: 8
+    image: aemdesign/aem-base:jdk8
+    container_name: aem-base
+    hostname: aem-base
+    networks:
+      - aem-network
+
   aem-base-jvm11:
     build:
       context: .
@@ -39,13 +51,13 @@ services:
         IS_IDLE_REPLICATION_TO_AEM_PUBLISH: false
         AEM_DIR: /opt/aem/author
         AEM_TYPE: 65
-        RUN_MODES: author,nosamplecontent,local,author-local,docker
+        RUN_MODES: author,nosamplecontent,local,author-local,docker,author-docker,dynamicmedia_scene7
         INSTALL_WKND_SAMPLE: false
         AEM_HTTP_PORT: 4502
         AEM_HTTPS_PORT: 8443
         DEBUG_PORT: 8888
-        NUM_OF_EXPECTED_BUNDLES_AFTER_FIRST_START: 733
-        NUM_OF_EXPECTED_BUNDLES_AFTER_SECOND_AND_SUBSEQUENT_STARTS: 740
+        NUM_OF_EXPECTED_BUNDLES_AFTER_FIRST_START: 617
+        NUM_OF_EXPECTED_BUNDLES_AFTER_SECOND_AND_SUBSEQUENT_STARTS: 617
         LICENSE_KEY: ${LICENSE_KEY:-}
         SECRETS_DIR: /mnt/secrets
     environment:
@@ -53,7 +65,7 @@ services:
       IS_IDLE_REPLICATION_TO_AEM_PUBLISH: false
       AEM_DIR: /opt/aem/author
       AEM_TYPE: 65
-      RUN_MODES: author,nosamplecontent,local,author-local,docker
+      RUN_MODES: author,nosamplecontent,local,author-local,docker,author-docker,dynamicmedia_scene7
       AEM_HTTP_PORT: 4502
       AEM_HTTPS_PORT: 8443
       DEBUG_PORT: 8888
@@ -197,19 +209,19 @@ services:
         AEM_BASE_IMAGE_VERSION: jvm11-1.0.0
         AEM_DIR: /opt/aem/publish
         AEM_TYPE: 65
-        RUN_MODES: publish,nosamplecontent,local,publish-local,docker
+        RUN_MODES: publish,nosamplecontent,local,publish-local,docker,publish-docker,dynamicmedia_scene7
         INSTALL_WKND_SAMPLE: false
         AEM_HTTP_PORT: 4503
         AEM_HTTPS_PORT: 8444
         DEBUG_PORT: 8889
-        NUM_OF_EXPECTED_BUNDLES_AFTER_FIRST_START: 733
-        NUM_OF_EXPECTED_BUNDLES_AFTER_SECOND_AND_SUBSEQUENT_STARTS: 740
+        NUM_OF_EXPECTED_BUNDLES_AFTER_FIRST_START: 617
+        NUM_OF_EXPECTED_BUNDLES_AFTER_SECOND_AND_SUBSEQUENT_STARTS: 617
         LICENSE_KEY: ${LICENSE_KEY:-}
         SECRETS_DIR: /mnt/secrets
     environment:
       AEM_DIR: /opt/aem/publish
       AEM_TYPE: 65
-      RUN_MODES: publish,nosamplecontent,local,publish-local,docker
+      RUN_MODES: publish,nosamplecontent,local,publish-local,docker,publish-docker,dynamicmedia_scene7
       AEM_HTTP_PORT: 4503
       AEM_HTTPS_PORT: 8444
       DEBUG_PORT: 8889
@@ -310,6 +322,71 @@ services:
     depends_on:
       - aem-base-jvm21
 
+  dispatcher-ams:
+    build:
+      context: 3_dispatcher_httpd
+      dockerfile: Dockerfile
+      args:
+        <<: *global-variables
+        CPU_ARCH: x86_64
+    image: dispatcher-ams:latest
+    container_name: dispatcher-ams
+    hostname: dispatcher
+    networks:
+      - aem-network
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
+      - target: 8443
+        published: 443
+        protocol: tcp
+        mode: host
+    environment:
+      - DISP_ID=docker
+      ## Replace value with the Author IP and Port you are using:
+      - AUTHOR_IP=aem-author
+      - AUTHOR_PORT=4502
+      - AUTHOR_DEFAULT_HOSTNAME=aem-author
+      - AUTHOR_DOCROOT=/mnt/var/www/author
+      ## Replace value with the Publisher IP and Port you are using:
+      - PUBLISH_IP=aem-publish
+      - PUBLISH_PORT=4503
+      - PUBLISH_DEFAULT_HOSTNAME=aem-publish
+      - PUBLISH_DOCROOT=/mnt/var/www/html
+      ## Replace value with the LiveCycle IP and Port you are using:
+      - LIVECYCLE_IP=127.0.0.1
+      - LIVECYCLE_PORT=8080
+      - LIVECYCLE_DEFAULT_HOSTNAME=aemforms-exampleco-dev.adobecqms.net
+      - LIVECYCLE_DOCROOT=/var/www/lc
+      - PUBLISH_FORCE_SSL=0
+      - AUTHOR_FORCE_SSL=0
+      ## Enable / Disable CRXDE access.  Production this should be disabled
+      - CRX_FILTER=deny
+      ## Allow dispatcher flush from any IP
+      - DISPATCHER_FLUSH_FROM_ANYWHERE=allow
+      ## Extra variables for HB environment
+      - HUGOBOSS_SERVER_NAME_PUBLISH=publish.hb.local
+      - HUGOBOSS_SERVER_ALIAS_PUBLISH=publish.hb.local
+      - HUGOBOSS_SERVER_NAME_AUTHOR=author.hb.local
+      - HUGOBOSS_SERVER_ALIAS_AUTHOR=author.hb.local
+    #volumes:
+      #- ./ams/2.6/etc/httpd/conf:/etc/httpd/conf:ro
+      #- ./ams/2.6/etc/httpd/conf.d:/etc/httpd/conf.d:ro
+      #- ./ams/2.6/etc/httpd/conf.dispatcher.d:/etc/httpd/conf.dispatcher.d:ro
+      #- ./ams/2.6/etc/httpd/conf.modules.d:/etc/httpd/conf.modules.d:ro
+      #- /mnt/c/dev/hugoboss/aem/dispatcher/httpd/conf:/etc/httpd/conf:ro
+      #- /mnt/c/dev/hugoboss/aem/dispatcher/httpd/conf.d:/etc/httpd/conf.d:ro
+      #- /mnt/c/dev/hugoboss/aem/dispatcher/httpd/conf.dispatcher.d:/etc/httpd/conf.dispatcher.d:ro
+      #- /mnt/c/dev/hugoboss/aem/dispatcher/httpd/conf.modules.d:/etc/httpd/conf.modules.d:ro
+      #- ./mnt/author_docroot:/var/www/author:rw
+      #- ./mnt/publish_docroot:/var/www/html:rw
+      #- ./mnt/lc:/var/www/lc:rw
+      #- ./mnt/log:/var/log/httpd:rw
+    depends_on:
+      - aem-base-jvm11
+
   dispatcher-amd:
     build:
       context: .
@@ -345,178 +422,6 @@ services:
     ports:
       - target: 80
         published: 80
-        protocol: tcp
-        mode: host
-    depends_on:
-      - aem-base-jvm11
-
-  varnish:
-    build:
-      context: .
-      dockerfile: 4_varnish/Dockerfile
-      args:
-        <<: *global-variables
-    image: varnish:latest
-    container_name: varnish
-    hostname: varnish
-    networks:
-      - aem-network
-    ports:
-      - target: 80
-        published: 80
-        protocol: tcp
-        mode: host
-    depends_on:
-      - aem-base-jvm11
-
-  solr1:
-    build:
-      context: .
-      dockerfile: 5_solr/Dockerfile
-      args:
-        SOLR_DIR: /opt/solr
-        ZK_HOST: zookeeper1:2181,zookeeper2:2181,zookeeper3:2181
-        IS_UNSAFE: true
-    environment:
-      SOLR_DIR: /opt/solr
-      SOLR_INTERNAL_PORT: 8983
-    image: solr:latest
-    container_name: solr1
-    entrypoint: [ "sh", "-c", "$$SOLR_DIR/solr-starter.sh" ]
-    hostname: solr1
-    networks:
-      - aem-network
-    ports:
-      - target: 8983
-        published: 8983
-        protocol: tcp
-        mode: host
-    depends_on:
-      - aem-base-jvm11
-      - zookeeper1
-
-  solr2:
-    build:
-      context: .
-      dockerfile: 5_solr/Dockerfile
-      args:
-        SOLR_DIR: /opt/solr
-        ZK_HOST: zookeeper1:2181,zookeeper2:2181,zookeeper3:2181
-        IS_UNSAFE: true
-    environment:
-      SOLR_DIR: /opt/solr
-      SOLR_INTERNAL_PORT: 8983
-    image: solr:latest
-    container_name: solr2
-    entrypoint: [ "sh", "-c", "$$SOLR_DIR/solr-starter.sh" ]
-    hostname: solr2
-    networks:
-      - aem-network
-    ports:
-      - target: 8983
-        published: 8984
-        protocol: tcp
-        mode: host
-    depends_on:
-      - aem-base-jvm11
-      - zookeeper2
-
-  solr3:
-    build:
-      context: .
-      dockerfile: 5_solr/Dockerfile
-      args:
-        SOLR_DIR: /opt/solr
-        ZK_HOST: zookeeper1:2181,zookeeper2:2181,zookeeper3:2181
-        IS_UNSAFE: true
-    environment:
-      SOLR_DIR: /opt/solr
-      SOLR_INTERNAL_PORT: 8983
-    image: solr:latest
-    container_name: solr3
-    entrypoint: [ "sh", "-c", "$$SOLR_DIR/solr-starter.sh" ]
-    hostname: solr3
-    networks:
-      - aem-network
-    ports:
-      - target: 8983
-        published: 8985
-        protocol: tcp
-        mode: host
-    depends_on:
-      - aem-base-jvm11
-      - zookeeper3
-
-  zookeeper1:
-    build:
-      context: .
-      dockerfile: 6_zookeeper/Dockerfile
-      args:
-        ZOOKEEPER_DIR: /opt/zookeeper
-        ZOOKEEPER_DATA_DIR: /var/lib/zookeeper
-    environment:
-      ZOOKEEPER_DIR: /opt/zookeeper
-      ZOOKEEPER_DATA_DIR: /var/lib/zookeeper
-      ZOOKEEPER_MY_ID: "1"
-    image: zookeeper:latest
-    container_name: zookeeper1
-    entrypoint: [ "sh", "-c", "$$ZOOKEEPER_DIR/zookeeper-starter.sh" ]
-    hostname: zookeeper1
-    networks:
-      - aem-network
-    ports:
-      - target: 2181
-        published: 2181
-        protocol: tcp
-        mode: host
-    depends_on:
-      - aem-base-jvm11
-
-  zookeeper2:
-    build:
-      context: .
-      dockerfile: 6_zookeeper/Dockerfile
-      args:
-        ZOOKEEPER_DIR: /opt/zookeeper
-        ZOOKEEPER_DATA_DIR: /var/lib/zookeeper
-    environment:
-      ZOOKEEPER_DIR: /opt/zookeeper
-      ZOOKEEPER_DATA_DIR: /var/lib/zookeeper
-      ZOOKEEPER_MY_ID: "2"
-    image: zookeeper:latest
-    container_name: zookeeper2
-    entrypoint: [ "sh", "-c", "$$ZOOKEEPER_DIR/zookeeper-starter.sh" ]
-    hostname: zookeeper2
-    networks:
-      - aem-network
-    ports:
-      - target: 2181
-        published: 2182
-        protocol: tcp
-        mode: host
-    depends_on:
-      - aem-base-jvm11
-
-  zookeeper3:
-    build:
-      context: .
-      dockerfile: 6_zookeeper/Dockerfile
-      args:
-        ZOOKEEPER_DIR: /opt/zookeeper
-        ZOOKEEPER_DATA_DIR: /var/lib/zookeeper
-    environment:
-      ZOOKEEPER_DIR: /opt/zookeeper
-      ZOOKEEPER_DATA_DIR: /var/lib/zookeeper
-      ZOOKEEPER_MY_ID: "3"
-    image: zookeeper:latest
-    container_name: zookeeper3
-    entrypoint: [ "sh", "-c", "$$ZOOKEEPER_DIR/zookeeper-starter.sh" ]
-    hostname: zookeeper3
-    networks:
-      - aem-network
-    ports:
-      - target: 2181
-        published: 2183
         protocol: tcp
         mode: host
     depends_on:
