@@ -37,12 +37,8 @@ _Dock AEM_ is a program for setting up and managing local Adobe Experience Manag
 .. AEM Publish as a Cloud Service
 .. AEM Dispatcher for AMD CPU architecture
 .. AEM Dispatcher for ARM CPU architecture
-.. Varnish Cache
-.. Apache Solr
-.. Apache ZooKeeper
+.. AEM Dispatcher based on httpd for AMS
 .. https://github.com/gessnerfl/fake-smtp-server[Fake SMTP Server]
-
-. Apache Solr and Apache ZooKeeper are configured as a cluster of containers: 3x for Apache Solr and 3x for Apache ZooKeeper. However, all Apache Solr containers are based on the same `solr` image and all Apache ZooKeeper are based on the same `zookeeper` image.
 
 . It is recommended that a machine, either virtual or real, on which _Dock AEM_ images are built and containers are used, has at least 12 GB RAM allocated. Otherwise, the respective Java processes started by the artifacts might be unexpectedly terminated.
 
@@ -62,7 +58,7 @@ git clone https://github.com/ciechanowiec/dock_aem
 +
 [source, bash]
 ----
-artifactsToRemove="aem-base aem-author-65 aem-author-cloud aem-publish-65 aem-publish-cloud dispatcher-amd dispatcher-arm varnish solr1 solr2 solr3 zookeeper1 zookeeper2 zookeeper3 fake-smtp-server"
+artifactsToRemove="aem-base aem-author-65 aem-author-cloud aem-publish-65 aem-publish-cloud dispatcher-amd dispatcher-arm dispatcher-ams fake-smtp-server"
 
 echo $artifactsToRemove | xargs -n2 docker container stop --time 30
 
@@ -201,9 +197,7 @@ aem-publish-65      latest    3a48c564925e   1 hour ago   10.1GB
 aem-publish-cloud   latest    aeb9052d3096   1 hour ago   4.2GB
 dispatcher-amd      latest    a6724be27ef7   1 hour ago   1.28GB
 dispatcher-arm      latest    ff8962803d23   1 hour ago   1.28GB
-varnish             latest    01f2cda11b61   1 hour ago   1.23GB
-solr                latest    e3d19f01025e   1 hour ago   1.63GB
-zookeeper           latest    f8713ce13cc2   1 hour ago   1.39GB
+dispatcher-ams      latest    9b9207bf0694   1 hour ago   433MB
 ----
 
 === Container Run, Start & Stop
@@ -228,13 +222,6 @@ It is also possible to pass more than one service name as parameters of the run 
 [source, bash]
 ----
 docker compose up aem-author-cloud aem-publish-cloud --detach
-----
-+
-In case of containers with dependencies it is sufficient just to run the container that has dependencies, because the dependency-containers will be activated automatically. For example, Apache Solr instances depend on Apache ZooKeeper instances. Therefore, running Apache Solr instances will automatically activate all related Apache ZooKeeper containers:
-+
-[source, bash]
-----
-docker compose up solr1 solr2 solr3 --detach
 ----
 +
 [NOTE]
@@ -294,8 +281,8 @@ docker cp "$HOME/dispatcher.any" dispatcher-amd:/etc/apache2/conf/dispatcher.any
 # AEM Dispatcher - ARM:
 docker cp "$HOME/dispatcher.any" dispatcher-arm:/etc/apache2/conf/dispatcher.any
 
-# Varnish Cache:
-docker cp "$HOME/default.vcl" varnish:/etc/varnish/default.vcl
+# AEM Dispatcher - AMS:
+./commons/deploy-dispatcher-httpd.sh
 ----
 
 . In order to activate new configuration of AEM Dispatcher or Varnish Cache, there is no need to restart containers. New configuration can be applied via reloading:
@@ -308,12 +295,9 @@ docker exec dispatcher-amd /etc/init.d/apache2 reload
 # AEM Dispatcher - ARM:
 docker exec dispatcher-arm /etc/init.d/apache2 reload
 
-# Varnish Cache:
-docker exec varnish varnishreload
+# AEM Dispatcher - AMS:
+docker exec dispatcher-ams /reload.sh
 ----
-
-=== Solr Configuration Sets Updates
-Apache Solr image embeds an `update-configset.sh` script that can be used to update configuration sets of the instance. Usage manual is provided in the script itself. There is also a `download-configsets.sh` script embedded for exporting existing configuration sets.
 
 === Mobile Volumes
 [upperalpha]
@@ -420,6 +404,35 @@ https://experienceleague.adobe.com/docs/experience-manager-65/deploying/deployin
 +
 _Docs:_ +
 https://experienceleague.adobe.com/docs/experience-manager-65/deploying/deploying/custom-standalone-install.html?lang=en
+
+== Setup for local development
+
+=== Prerequisistes
+- AEM development project available locally (and its prerequisites)
+- Shell command line available (Windows may use WSL)
+- Docker and Docker Compose available
+
+=== Initial setup
+. AMS
+- start instances: `docker compose up aem-author-65 aem-publish-65 dispatcher-ams --detach`
+- deploy project on author: `mvn clean install -PdeployThirdParty,deployPackage`
+- deploy project on publish: `mvn clean install -PdeployThirdParty,deployPackage -Daem.port=4503`
+- set project directory variable: `export PROJECT_SRC_DIR=/mnt/c/dev/hugoboss/aem/`
+- deploy dispatcher: `./src/commons/deploy-dispatcher-httpd.sh`
+
+=== Remote debug
+- Author: port `8888`
+- Publish: port `8889`
+
+=== Access instances
+- Command line: `docker exec -it <name of the container> /bin/bash`
+- Author logs: `/opt/aem/author/crx-quickstart/logs/`
+- Publish logs: `/opt/aem/publish/crx-quickstart/logs/`
+- Dispatcher logs: `/etc/httpd/logs/`
+
+=== Stop/restart instances
+- Stop: `docker compose down <name of the container>`
+- Restart: `docker restart -t0 <name of the container>`
 
 == License
 The program is subject to MIT No Attribution License
