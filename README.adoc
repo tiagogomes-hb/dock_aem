@@ -424,7 +424,7 @@ https://experienceleague.adobe.com/docs/experience-manager-65/deploying/deployin
 deploy-aem-packages.sh script can be used to deploy the built project into multiple AEM instances without needing to rebuild it every time. Example usage: +
 `mvn clean package +
 ./deploy-aem-packages.sh +
-./deploy-aem-packages.sh -Daem.port=4503`
+./deploy-aem-packages.sh -p 4503`
 
 === Remote debug
 - Author: port `8888`
