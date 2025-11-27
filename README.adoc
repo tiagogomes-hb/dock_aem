@@ -415,10 +415,16 @@ https://experienceleague.adobe.com/docs/experience-manager-65/deploying/deployin
 === Initial setup
 . AMS
 - start instances: `docker compose up aem-author-65 aem-publish-65 dispatcher-ams --detach`
+- set project directory variable: `export PROJECT_SRC_DIR=/mnt/c/dev/hugoboss/aem`
 - deploy project on author: `mvn clean install -PdeployThirdParty,deployPackage`
 - deploy project on publish: `mvn clean install -PdeployThirdParty,deployPackage -Daem.port=4503`
-- set project directory variable: `export PROJECT_SRC_DIR=/mnt/c/dev/hugoboss/aem/`
 - deploy dispatcher: `./src/commons/deploy-dispatcher-httpd.sh`
+
+[NOTE]
+deploy-aem-packages.sh script can be used to deploy the built project into multiple AEM instances without needing to rebuild it every time. Example usage: +
+`mvn clean package +
+./deploy-aem-packages.sh +
+./deploy-aem-packages.sh -Daem.port=4503`
 
 === Remote debug
 - Author: port `8888`
