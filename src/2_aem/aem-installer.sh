@@ -323,7 +323,7 @@ setDispatcherReplicationAgent () {
       -F "protocolHTTPHeaders=CQ-Action:{action}" \
       -F "protocolHTTPHeaders=CQ-Handle:{path}" \
       -F "protocolHTTPHeaders=CQ-Path: {path}" \
-      -F "protocolHTTPHeaders=Host:flush"
+      -F "protocolHTTPHeaders=Host:flush" \
       "http://localhost:$AEM_HTTP_PORT/etc/replication/agents.author/flush/jcr:content")
   echo "$curlOutput"
   if echo "$curlOutput" | grep -iq "Content modified"

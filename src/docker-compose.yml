@@ -329,8 +329,8 @@ services:
       args:
         <<: *global-variables
         CPU_ARCH: x86_64
-    image: dispatcher-ams:latest
-    container_name: dispatcher-ams
+    image: dispatcher:latest
+    container_name: dispatcher
     hostname: dispatcher
     networks:
       - aem-network
@@ -371,19 +371,6 @@ services:
       - HUGOBOSS_SERVER_ALIAS_PUBLISH=publish.hb.local
       - HUGOBOSS_SERVER_NAME_AUTHOR=author.hb.local
       - HUGOBOSS_SERVER_ALIAS_AUTHOR=author.hb.local
-    #volumes:
-      #- ./ams/2.6/etc/httpd/conf:/etc/httpd/conf:ro
-      #- ./ams/2.6/etc/httpd/conf.d:/etc/httpd/conf.d:ro
-      #- ./ams/2.6/etc/httpd/conf.dispatcher.d:/etc/httpd/conf.dispatcher.d:ro
-      #- ./ams/2.6/etc/httpd/conf.modules.d:/etc/httpd/conf.modules.d:ro
-      #- /mnt/c/dev/hugoboss/aem/dispatcher/httpd/conf:/etc/httpd/conf:ro
-      #- /mnt/c/dev/hugoboss/aem/dispatcher/httpd/conf.d:/etc/httpd/conf.d:ro
-      #- /mnt/c/dev/hugoboss/aem/dispatcher/httpd/conf.dispatcher.d:/etc/httpd/conf.dispatcher.d:ro
-      #- /mnt/c/dev/hugoboss/aem/dispatcher/httpd/conf.modules.d:/etc/httpd/conf.modules.d:ro
-      #- ./mnt/author_docroot:/var/www/author:rw
-      #- ./mnt/publish_docroot:/var/www/html:rw
-      #- ./mnt/lc:/var/www/lc:rw
-      #- ./mnt/log:/var/log/httpd:rw
     depends_on:
       - aem-base-jvm11
 

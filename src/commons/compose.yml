@@ -1,0 +1,104 @@
+services:
+  aem-author:
+    image: aemhub.azurecr.io/ms/aem-author:latest
+    container_name: aem-author
+    environment:
+      AEM_PUBLISH_HOSTNAME: aem-publish
+      AEM_PUBLISH_HTTP_PORT: 4503
+      DISPATCHER_HOSTNAME: dispatcher
+      IS_IDLE_REPLICATION_TO_AEM_PUBLISH: false
+      AEM_DIR: /opt/aem/author
+      RUN_MODES: author,nosamplecontent,local,author-local,docker,author-docker,dynamicmedia_scene7
+      AEM_HTTP_PORT: 4502
+      DEBUG_PORT: 8888
+    volumes:
+      - type: volume
+        source: aem-author-data
+        target: /opt/aem/author/crx-quickstart
+    # exec is required in order to set the Java process as PID 1 inside the container, since Docker sends
+    # termination signals only to PID 1, and we need those signals to be handled by the java process:
+    entrypoint: [ "sh", "-c", "exec $$AEM_DIR/aem-starter.sh" ]
+    # Grace period should be long enough so that the JCR is closed correctly and doesn't get corrupted:
+    stop_grace_period: 300s
+    hostname: aem-author
+    networks:
+      - aem-network
+    ports:
+      - "4502:4502"
+      - "8443:8443"
+      - "8888:8888"
+
+  aem-publish:
+    image: aemhub.azurecr.io/ms/aem-publish:latest
+    container_name: aem-publish
+    environment:
+      AEM_DIR: /opt/aem/publish
+      RUN_MODES: publish,nosamplecontent,local,publish-local,docker,publish-docker,dynamicmedia_scene7
+      AEM_HTTP_PORT: 4503
+      DEBUG_PORT: 8889
+    volumes:
+      - type: volume
+        source: aem-publish-data
+        target: /opt/aem/publish/crx-quickstart
+    # exec is required in order to set the Java process as PID 1 inside the container, since Docker sends
+    # termination signals only to PID 1, and we need those signals to be handled by the java process:
+    entrypoint: [ "sh", "-c", "exec $$AEM_DIR/aem-starter.sh" ]
+    # Grace period should be long enough so that the JCR is closed correctly and doesn't get corrupted:
+    stop_grace_period: 300s
+    hostname: aem-publish
+    networks:
+      - aem-network
+    ports:
+      - "4503:4503"
+      - "8444:8444"
+      - "8889:8889"
+
+  dispatcher:
+    image: aemhub.azurecr.io/ms/dispatcher:latest
+    container_name: dispatcher
+    hostname: dispatcher
+    networks:
+      - aem-network
+    ports:
+      - "80:80"
+      - "443:8443"
+    environment:
+      - DISP_ID=docker
+      ## Replace value with the Author IP and Port you are using:
+      - AUTHOR_IP=aem-author
+      - AUTHOR_PORT=4502
+      - AUTHOR_DEFAULT_HOSTNAME=aem-author
+      - AUTHOR_DOCROOT=/mnt/var/www/author
+      ## Replace value with the Publisher IP and Port you are using:
+      - PUBLISH_IP=aem-publish
+      - PUBLISH_PORT=4503
+      - PUBLISH_DEFAULT_HOSTNAME=aem-publish
+      - PUBLISH_DOCROOT=/mnt/var/www/html
+      ## Replace value with the LiveCycle IP and Port you are using:
+      - LIVECYCLE_IP=127.0.0.1
+      - LIVECYCLE_PORT=8080
+      - LIVECYCLE_DEFAULT_HOSTNAME=aemforms-exampleco-dev.adobecqms.net
+      - LIVECYCLE_DOCROOT=/var/www/lc
+      - PUBLISH_FORCE_SSL=0
+      - AUTHOR_FORCE_SSL=0
+      ## Enable / Disable CRXDE access.  Production this should be disabled
+      - CRX_FILTER=deny
+      ## Allow dispatcher flush from any IP
+      - DISPATCHER_FLUSH_FROM_ANYWHERE=allow
+      ## Extra variables for HB environment
+      - HUGOBOSS_SERVER_NAME_PUBLISH=publish.hb.local
+      - HUGOBOSS_SERVER_ALIAS_PUBLISH=publish.hb.local
+      - HUGOBOSS_SERVER_NAME_AUTHOR=author.hb.local
+      - HUGOBOSS_SERVER_ALIAS_AUTHOR=author.hb.local
+
+volumes:
+  aem-author-data:
+    name: "aem-author-data"
+  aem-publish-data:
+    name: "aem-publish-data"
+
+networks:
+  aem-network:
+    driver: bridge
+    # This name is required to avoid name prefixing by Docker:
+    name: aem-network

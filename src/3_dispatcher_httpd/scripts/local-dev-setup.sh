@@ -20,21 +20,3 @@ if [ -z "${DISPATCHER_FLUSH_FROM_ANYWHERE}" ]; then
 fi
 
 echo -e "/999 {\n    /glob \"*.*.*.*\"\n    /type \"${DISPATCHER_FLUSH_FROM_ANYWHERE}\"\n}$(cat /etc/httpd/conf.dispatcher.d/cache/ams_publish_invalidate_allowed.any)" > /etc/httpd/conf.dispatcher.d/cache/ams_publish_invalidate_allowed.any
-#sed -i '1i/999 {\n/    glob "*.*.*.*"\n    /type "${DISPATCHER_FLUSH_FROM_ANYWHERE}"\n}' /etc/httpd/conf.dispatcher.d/cache/ams_publish_invalidate_allowed.any
-#echo '/999 {\n/    glob "*.*.*.*"\n    /type "${DISPATCHER_FLUSH_FROM_ANYWHERE}"\n}' | cat - /etc/httpd/conf.dispatcher.d/cache/ams_publish_invalidate_allowed.any > temp && mv temp /etc/httpd/conf.dispatcher.d/cache/ams_publish_invalidate_allowed.any
-
-# /etc/httpd/conf.dispatcher.d/cache/ams_publish_invalidate_allowed.any
-# /999 {
-#        /glob "*.*.*.*"
-#        /type "${DISPATCHER_FLUSH_FROM_ANYWHERE}"
-#}
-
-#echo "apache user must have permissions to write on the PUBLISH_DOCROOT ..."
-# docker exec dispatcher-ams chown -R apache:apache /mnt/var/www/html
-# docker exec dispatcher-ams chmod -R 755 /mnt/var/www/html
-# docker exec dispatcher-ams ls -ld /mnt/var/www/html
-# docker exec dispatcher-ams ls -l /mnt/var/www/html
-# docker exec dispatcher-ams ls -ld /mnt/var/www/html/*
-# docker exec dispatcher-ams ls -l /mnt/var/www/html/*
-# docker exec dispatcher-ams ls -ld /mnt/var/www/html/*/*
-# docker exec dispatcher-ams ls -l /mnt/var/www/html/*/*

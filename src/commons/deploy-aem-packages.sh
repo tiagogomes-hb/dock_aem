@@ -29,16 +29,10 @@ function installPackage
         echo "Package $PROJECT_SRC_DIR$MODULE_PATH does not exist, please build the project first."
         exit 1
     fi
-    
+
     echo "Installing package $PROJECT_SRC_DIR$MODULE_PATH ..."
 	curl -u $AEM_CREDENTIALS --fail -F file=@"$PROJECT_SRC_DIR$MODULE_PATH" -F force=true -F install=true $HOST/crx/packmgr/service.jsp
 }
-
-#if [ -z "$1" ]; then
-#    echo "Defaulting to AEM Author instance ..."
-#else
-#    AEM_ENV=$1
-#fi
 
 while [ "$1" != "" ]; do
 	case $1 in
