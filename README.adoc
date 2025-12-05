@@ -414,7 +414,7 @@ https://experienceleague.adobe.com/docs/experience-manager-65/deploying/deployin
 
 === Initial setup
 . AMS
-- start instances: `docker compose up aem-author-65 aem-publish-65 dispatcher-ams --detach`
+- start instances: `docker compose -f compose-ams.yml up --detach`
 - set project directory variable: `export PROJECT_SRC_DIR=/mnt/c/dev/hugoboss/aem`
 - deploy project on author: `mvn clean install -PdeployThirdParty,deployPackage`
 - deploy project on publish: `mvn clean install -PdeployThirdParty,deployPackage -Daem.port=4503`
