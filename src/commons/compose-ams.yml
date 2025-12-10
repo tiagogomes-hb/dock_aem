@@ -8,7 +8,7 @@ services:
       DISPATCHER_HOSTNAME: dispatcher
       IS_IDLE_REPLICATION_TO_AEM_PUBLISH: false
       AEM_DIR: /opt/aem/author
-      RUN_MODES: author,nosamplecontent,local,author-local,docker,author-docker,dynamicmedia_scene7
+      RUN_MODES: author,nosamplecontent,local,author-local,docker,author-docker,dynamicmedia_scene7,localdevelopment
       AEM_HTTP_PORT: 4502
       DEBUG_PORT: 8888
     volumes:
@@ -33,7 +33,7 @@ services:
     container_name: aem-publish
     environment:
       AEM_DIR: /opt/aem/publish
-      RUN_MODES: publish,nosamplecontent,local,publish-local,docker,publish-docker,dynamicmedia_scene7
+      RUN_MODES: publish,nosamplecontent,local,publish-local,docker,publish-docker,dynamicmedia_scene7,localdevelopment
       AEM_HTTP_PORT: 4503
       DEBUG_PORT: 8889
     volumes:
