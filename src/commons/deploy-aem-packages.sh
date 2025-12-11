@@ -34,6 +34,17 @@ function installPackage
 	curl -u $AEM_CREDENTIALS --fail -F file=@"$PROJECT_SRC_DIR$MODULE_PATH" -F force=true -F install=true $HOST/crx/packmgr/service.jsp
 }
 
+function installBundle
+{
+    if [ ! -f "$PROJECT_SRC_DIR$MODULE_PATH" ]; then
+        echo "Bundle $PROJECT_SRC_DIR$MODULE_PATH does not exist, please build the project first."
+        exit 1
+    fi
+
+    echo "Installing bundle $PROJECT_SRC_DIR$MODULE_PATH ..."
+	curl -u $AEM_CREDENTIALS --fail -F bundlefile=@"$PROJECT_SRC_DIR$MODULE_PATH" -F bundlestartlevel=20 -F action=install $HOST/system/console/bundles
+}
+
 while [ "$1" != "" ]; do
 	case $1 in
 		-h | --hostname )	    shift
@@ -95,6 +106,18 @@ else
                         ;;
 		frontend )		MODULE_PATH=/frontend/target/frontend-1.0-SNAPSHOT.zip
                         installPackage
+                        ;;
+		sites )			MODULE_PATH=/bundles/sites/target/sites.bundle-1.0-SNAPSHOT.jar
+                        installBundle
+                        ;;
+		newsletter )	MODULE_PATH=/bundles/newsletter/target/newsletter.bundle-1.0-SNAPSHOT.jar
+                        installBundle
+                        ;;
+		processes )		MODULE_PATH=/bundles/processes/target/processes.bundle-1.0-SNAPSHOT.jar
+                        installBundle
+                        ;;
+		platform )		MODULE_PATH=/bundles/platform/target/platform.bundle-1.0-SNAPSHOT.jar
+                        installBundle
                         ;;
         * )				echo "Unknown module: $MODULE"
                         exit 1
