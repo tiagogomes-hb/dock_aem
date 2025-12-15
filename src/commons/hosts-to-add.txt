@@ -1,0 +1,2 @@
+127.0.0.1 author.hb.local
+127.0.0.1 publish.hb.local

@@ -14,7 +14,7 @@ else
 
     echo "Running local-dev-setup.sh ..."
 
-    docker exec dispatcher /local-dev-setup.sh
+    docker exec dispatcher ./local-dev-setup.sh
 
     echo "Reloading dispatcher ..."
 

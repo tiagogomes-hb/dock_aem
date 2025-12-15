@@ -414,11 +414,17 @@ https://experienceleague.adobe.com/docs/experience-manager-65/deploying/deployin
 
 === Initial setup
 . AMS
+- go to `src/commons` directory in the _Dock AEM_ source code repository
 - start instances: `docker compose -f compose-ams.yml up --detach`
 - set project directory variable: `export PROJECT_SRC_DIR=/mnt/c/dev/hugoboss/aem`
 - deploy project on author: `mvn clean install -PdeployThirdParty,deployPackage`
 - deploy project on publish: `mvn clean install -PdeployThirdParty,deployPackage -Daem.port=4503`
-- deploy dispatcher: `./src/commons/deploy-dispatcher-httpd.sh`
+- deploy dispatcher: `./deploy-dispatcher-httpd.sh`
+- To access AEM through the custom domains (author.hb.local and publish.hb.local), add them to the hosts file. 
+* On Windows, open a Powershell as Administrator and use `add-hosts-windows.ps1` script: +
+`powershell -NoProfile -ExecutionPolicy Bypass -File .\add-hosts-windows.ps1 -FromFile .\hosts-to-add.txt`
+* On Unix systems, use `add-hosts-others.sh` script: +
+`sudo ./add-hosts-others.sh -f hosts-to-add.txt`
 
 [NOTE]
 deploy-aem-packages.sh script can be used to deploy the built project into multiple AEM instances without needing to rebuild it every time. Example usage: +
